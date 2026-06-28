@@ -12,26 +12,31 @@ import logoSrc from "@assets/file_00000000fac4720ea74d9f59620a35f6_1782623975956
 import infographic1Src from "@assets/IMG_20260628_001749_714_1782623926390.jpg";
 import infographic2Src from "@assets/IMG_20260628_001714_311_1782623942087.jpg";
 
+const TOTAL_SUPPLY = 10_000_000;
+const COMMISSION_RATE = 0.05;
+const POOL_SHARE = 0.025;
+const DEV_SHARE = 0.025;
+
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
-  const [role, setRole] = useState<"user" | "dev">("user");
-  const [duration, setDuration] = useState("30");
-  const [amountInput, setAmountInput] = useState("1");
-
-  // Update amount when role changes
-  const handleRoleChange = (newRole: "user" | "dev") => {
-    setRole(newRole);
-    setAmountInput(newRole === "user" ? "1" : "10");
-  };
+  const [role, setRole] = useState<"dueno" | "usuario">("usuario");
+  const [amountInput, setAmountInput] = useState("");
+  const [staked, setStaked] = useState(false);
 
   const amount = parseFloat(amountInput) || 0;
-  const days = parseInt(duration) || 0;
-  const projectedEarnings = amount * days;
+  const commissionUSG = amount * COMMISSION_RATE;
+  const poolFundUSG = amount * POOL_SHARE;
+  const devShareUSG = amount * DEV_SHARE;
+  const netStakedUSG = amount - commissionUSG;
+
+  const handleStake = () => {
+    if (amount > 0) setStaked(true);
+  };
 
   return (
     <div className="min-h-screen text-foreground overflow-hidden relative">
       <div className="stars"></div>
-      
+
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 w-full glass-card border-b-0 border-b-white/10">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -42,17 +47,17 @@ export default function Home() {
             </span>
           </div>
           <nav className="flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium hover:text-primary transition-colors data-[active=true]:text-primary" data-testid="link-home">
+            <Link href="/" className="text-sm font-medium hover:text-primary transition-colors" data-testid="link-home">
               Inicio
             </Link>
             <div className="flex items-center gap-2 border-l border-white/20 pl-6">
               <Label htmlFor="wallet-sim" className="text-xs text-muted-foreground cursor-pointer">
                 Simular Conexión
               </Label>
-              <Switch 
-                id="wallet-sim" 
-                checked={isConnected} 
-                onCheckedChange={setIsConnected}
+              <Switch
+                id="wallet-sim"
+                checked={isConnected}
+                onCheckedChange={(v) => { setIsConnected(v); if (!v) setStaked(false); }}
                 data-testid="toggle-wallet-sim"
               />
             </div>
@@ -64,12 +69,12 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative pt-20 pb-16 px-4 flex flex-col items-center justify-center text-center">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.1)_0%,transparent_50%)] -z-10"></div>
-          
+
           <div className="relative mb-8 w-48 h-48 sm:w-64 sm:h-64 animate-float">
             <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
-            <img 
-              src={logoSrc} 
-              alt="Unity Stake Global" 
+            <img
+              src={logoSrc}
+              alt="Unity Stake Global"
               className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]"
             />
           </div>
@@ -82,148 +87,248 @@ export default function Home() {
           </p>
 
           {/* Stats Bar */}
-          <div className="glass-card rounded-2xl p-6 flex flex-wrap justify-center gap-8 md:gap-16 w-full max-w-4xl mx-auto">
-            <div className="flex flex-col items-center">
+          <div className="glass-card rounded-2xl p-6 flex flex-wrap justify-center gap-8 md:gap-12 w-full max-w-5xl mx-auto">
+            <div className="flex flex-col items-center" data-testid="stat-developers">
               <span className="text-3xl font-bold text-primary">100+</span>
-              <span className="text-sm text-muted-foreground uppercase tracking-wider mt-1">Desarrolladores</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Desarrolladores</span>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center" data-testid="stat-users">
               <span className="text-3xl font-bold text-primary">100k+</span>
-              <span className="text-sm text-muted-foreground uppercase tracking-wider mt-1">Personas</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Personas</span>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center" data-testid="stat-commission">
               <span className="text-3xl font-bold text-secondary">5%</span>
-              <span className="text-sm text-muted-foreground uppercase tracking-wider mt-1">Comisión Sistema</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Comisión Sistema</span>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center" data-testid="stat-supply">
+              <span className="text-3xl font-bold text-primary">10M</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Supply USG</span>
+            </div>
+            <div className="flex flex-col items-center" data-testid="stat-network">
               <span className="text-3xl font-bold text-white">World</span>
-              <span className="text-sm text-muted-foreground uppercase tracking-wider mt-1">Chain</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Chain</span>
             </div>
           </div>
         </section>
 
         {/* Staking Section */}
         <section className="px-4 py-12 relative z-10">
-          <div className="max-w-md mx-auto">
+          <div className="max-w-lg mx-auto">
+            {/* Section Title */}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight font-orbitron">
+                Stake <span className="text-primary">Flexible</span>
+              </h2>
+              <p className="text-muted-foreground text-sm mt-2">
+                Fondea el ecosistema en USG — sin montos fijos
+              </p>
+            </div>
+
             <Card className="glass-card border-0 p-8 shadow-2xl relative overflow-hidden">
-              {/* Background accents in card */}
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl"></div>
               <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-secondary/10 rounded-full blur-3xl"></div>
-              
-              <div className="relative z-10 flex flex-col gap-8">
+
+              <div className="relative z-10 flex flex-col gap-7">
+
                 {/* Token Header */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-black/50 p-1 border border-white/10 flex items-center justify-center shrink-0">
-                    <img src={logoSrc} alt="USG" className="w-full h-full object-contain" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-black/50 p-1 border border-white/10 flex items-center justify-center shrink-0">
+                      <img src={logoSrc} alt="USG" className="w-full h-full object-contain" />
+                    </div>
+                    <div>
+                      <h3 className="font-orbitron font-bold text-xl leading-none">USG</h3>
+                      <span className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                        Unity Global Stake
+                        <Badge variant="outline" className="text-[10px] h-4 bg-secondary/10 text-secondary border-secondary/20">
+                          World Chain
+                        </Badge>
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-orbitron font-bold text-xl leading-none">Stake USG</h3>
-                    <span className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                      World Chain <Badge variant="outline" className="text-[10px] h-4 bg-secondary/10 text-secondary border-secondary/20">LIVE</Badge>
-                    </span>
+                  {/* APR de Mercado */}
+                  <div className="text-right">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">APR de Mercado</div>
+                    <div className="text-xl font-bold text-primary font-orbitron" data-testid="stat-apr">
+                      ~ <span className="animate-pulse">??</span> %
+                    </div>
+                    <div className="text-[10px] text-muted-foreground/60 mt-0.5">Variable · No configurable</div>
+                  </div>
+                </div>
+
+                {/* Token Info Row */}
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-black/40 rounded-lg p-3 border border-white/5">
+                    <div className="text-xs text-muted-foreground mb-1">Supply Total</div>
+                    <div className="font-bold text-primary text-sm font-orbitron">
+                      {TOTAL_SUPPLY.toLocaleString("es")}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">USG</div>
+                  </div>
+                  <div className="bg-black/40 rounded-lg p-3 border border-white/5">
+                    <div className="text-xs text-muted-foreground mb-1">Comisión</div>
+                    <div className="font-bold text-secondary text-sm font-orbitron">5%</div>
+                    <div className="text-[10px] text-muted-foreground">en USG</div>
+                  </div>
+                  <div className="bg-black/40 rounded-lg p-3 border border-white/5">
+                    <div className="text-xs text-muted-foreground mb-1">Tipo</div>
+                    <div className="font-bold text-white text-sm font-orbitron">Flexible</div>
+                    <div className="text-[10px] text-muted-foreground">Sin plazo fijo</div>
                   </div>
                 </div>
 
                 {/* Role Selector */}
                 <div className="space-y-3">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Seleccionar Rol</Label>
-                  <RadioGroup value={role} onValueChange={handleRoleChange} className="grid grid-cols-2 gap-4">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">¿Quién fondea?</Label>
+                  <RadioGroup
+                    value={role}
+                    onValueChange={(v) => setRole(v as "dueno" | "usuario")}
+                    className="grid grid-cols-2 gap-4"
+                  >
                     <Label
-                      htmlFor="role-user"
+                      htmlFor="role-dueno"
                       className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer transition-all ${
-                        role === "user" ? "border-primary bg-primary/10" : "border-white/10 hover:bg-white/5"
+                        role === "dueno" ? "border-primary bg-primary/10" : "border-white/10 hover:bg-white/5"
                       }`}
+                      data-testid="role-dueno"
                     >
-                      <RadioGroupItem value="user" id="role-user" className="sr-only" />
-                      <span className="font-bold">Usuario</span>
-                      <span className="text-xs text-muted-foreground mt-1">Min $1/día</span>
+                      <RadioGroupItem value="dueno" id="role-dueno" className="sr-only" />
+                      <span className="font-bold text-sm">Dueño</span>
+                      <span className="text-xs text-muted-foreground mt-1 text-center">Aporta al crecimiento y estabilidad</span>
                     </Label>
                     <Label
-                      htmlFor="role-dev"
+                      htmlFor="role-usuario"
                       className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer transition-all ${
-                        role === "dev" ? "border-secondary bg-secondary/10" : "border-white/10 hover:bg-white/5"
+                        role === "usuario" ? "border-secondary bg-secondary/10" : "border-white/10 hover:bg-white/5"
                       }`}
+                      data-testid="role-usuario"
                     >
-                      <RadioGroupItem value="dev" id="role-dev" className="sr-only" />
-                      <span className="font-bold">Desarrollador</span>
-                      <span className="text-xs text-muted-foreground mt-1">Min $10/día</span>
+                      <RadioGroupItem value="usuario" id="role-usuario" className="sr-only" />
+                      <span className="font-bold text-sm">Usuario</span>
+                      <span className="text-xs text-muted-foreground mt-1 text-center">Fondea y es parte activa del éxito</span>
                     </Label>
                   </RadioGroup>
                 </div>
 
-                {/* Amount Input */}
+                {/* Amount Input in USG */}
                 <div className="space-y-3">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Monto Diario (USD)</Label>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Cantidad a Fondear (USG)
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
+                      placeholder="0.00"
                       value={amountInput}
-                      onChange={(e) => setAmountInput(e.target.value)}
-                      className="pl-8 bg-black/40 border-white/10 text-lg font-bold h-14"
-                      min={role === "user" ? 1 : 10}
+                      onChange={(e) => { setAmountInput(e.target.value); setStaked(false); }}
+                      className="pr-16 bg-black/40 border-white/10 text-lg font-bold h-14 font-orbitron"
+                      min={0}
                       data-testid="input-amount"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-primary font-bold">USG eq.</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-primary font-bold tracking-wider">
+                      USG
+                    </span>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Sin monto mínimo fijo — fondea libremente según tu capacidad
+                  </p>
                 </div>
 
-                {/* Duration Selector */}
-                <div className="space-y-3">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Duración</Label>
-                  <RadioGroup value={duration} onValueChange={setDuration} className="flex gap-2">
-                    {["30", "60", "90"].map((d) => (
-                      <Label
-                        key={d}
-                        htmlFor={`dur-${d}`}
-                        className={`flex-1 flex items-center justify-center rounded-lg border-2 py-3 cursor-pointer transition-all ${
-                          duration === d ? "border-primary text-primary" : "border-white/10 text-muted-foreground hover:bg-white/5"
-                        }`}
-                      >
-                        <RadioGroupItem value={d} id={`dur-${d}`} className="sr-only" />
-                        <span className="font-bold">{d} Días</span>
-                      </Label>
-                    ))}
-                  </RadioGroup>
-                </div>
+                {/* Breakdown — only when amount > 0 */}
+                {amount > 0 && (
+                  <div className="bg-black/40 rounded-xl p-5 border border-white/5 space-y-4" data-testid="breakdown-panel">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Monto a fondear</span>
+                      <span className="font-bold font-orbitron">{amount.toLocaleString("es", { maximumFractionDigits: 4 })} USG</span>
+                    </div>
 
-                {/* Projected Earnings */}
-                <div className="bg-black/40 rounded-xl p-4 border border-white/5">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Aporte Total Proyectado</span>
-                    <span className="text-xl font-bold font-orbitron">${projectedEarnings.toFixed(2)}</span>
-                  </div>
-                  <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-3">
-                    <div className="bg-gradient-to-r from-primary to-orange-500 h-full w-full animate-pulse-glow"></div>
-                  </div>
-                </div>
+                    <div className="border-t border-white/5 pt-3 space-y-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+                        Comisión sistema · 5% en USG
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0"></span>
+                          <span className="text-sm">Auto-fondeo al Pool</span>
+                        </div>
+                        <span className="font-bold text-primary">
+                          {poolFundUSG.toLocaleString("es", { maximumFractionDigits: 4 })} USG
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-secondary shrink-0"></span>
+                          <span className="text-sm">Repartido entre Devs</span>
+                        </div>
+                        <span className="font-bold text-secondary">
+                          {devShareUSG.toLocaleString("es", { maximumFractionDigits: 4 })} USG
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Commission Breakdown */}
-                <div className="flex justify-between text-xs text-muted-foreground px-2 border-t border-white/5 pt-4">
-                  <span>Comisión: 5%</span>
-                  <div className="flex gap-4">
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary"></span> 2.5% Fondo</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-secondary"></span> 2.5% Devs</span>
-                  </div>
-                </div>
+                    <div className="border-t border-white/5 pt-3 flex justify-between items-center">
+                      <span className="text-sm font-bold">USG neto en stake</span>
+                      <span className="text-xl font-black font-orbitron text-glow">
+                        {netStakedUSG.toLocaleString("es", { maximumFractionDigits: 4 })} USG
+                      </span>
+                    </div>
 
-                {/* CTA Button */}
+                    {/* Commission visual bar */}
+                    <div className="w-full h-2 rounded-full overflow-hidden flex gap-0.5">
+                      <div
+                        className="h-full bg-gradient-to-r from-primary to-orange-500 rounded-l-full"
+                        style={{ width: "95%" }}
+                      ></div>
+                      <div className="h-full bg-primary/60" style={{ width: "2.5%" }}></div>
+                      <div className="h-full bg-secondary/60 rounded-r-full" style={{ width: "2.5%" }}></div>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground/70">
+                      <span>95% tu stake</span>
+                      <span>2.5% pool</span>
+                      <span>2.5% devs</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* CTA Buttons */}
                 {!isConnected ? (
-                  <Button 
+                  <Button
                     className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-black glow-gold transition-all"
                     onClick={() => setIsConnected(true)}
                     data-testid="button-connect"
                   >
                     CONECTAR WALLET
                   </Button>
+                ) : staked ? (
+                  <div className="text-center space-y-2" data-testid="stake-success">
+                    <div className="text-secondary font-bold text-lg font-orbitron">Stake activo</div>
+                    <div className="text-sm text-muted-foreground">
+                      {netStakedUSG.toLocaleString("es", { maximumFractionDigits: 4 })} USG fondeados en World Chain
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full border-white/20 hover:bg-white/5"
+                      onClick={() => { setAmountInput(""); setStaked(false); }}
+                      data-testid="button-new-stake"
+                    >
+                      Nuevo Stake
+                    </Button>
+                  </div>
                 ) : (
-                  <Button 
-                    className="w-full h-14 text-lg font-bold bg-gradient-to-r from-secondary to-blue-600 hover:from-secondary/90 hover:to-blue-600/90 text-white glow-blue transition-all"
+                  <Button
+                    className="w-full h-14 text-lg font-bold bg-gradient-to-r from-secondary to-blue-600 hover:from-secondary/90 hover:to-blue-600/90 text-white glow-blue transition-all disabled:opacity-40"
+                    onClick={handleStake}
+                    disabled={amount <= 0}
                     data-testid="button-stake"
                   >
                     HACER STAKE
                   </Button>
                 )}
+
+                {/* APR note */}
+                <p className="text-center text-xs text-muted-foreground/60">
+                  El APR es determinado por el mercado en tiempo real y no es configurable por el administrador.
+                </p>
               </div>
             </Card>
           </div>
@@ -238,18 +343,18 @@ export default function Home() {
 
           <div className="space-y-16 max-w-5xl mx-auto">
             <div className="glass-card p-2 md:p-4 rounded-2xl overflow-hidden shadow-2xl">
-              <img 
-                src={infographic1Src} 
-                alt="Estructura de Comisión y Valores" 
+              <img
+                src={infographic1Src}
+                alt="Estructura de Comisión y Valores"
                 className="w-full rounded-xl"
                 loading="lazy"
               />
             </div>
-            
+
             <div className="glass-card p-2 md:p-4 rounded-2xl overflow-hidden shadow-2xl">
-              <img 
-                src={infographic2Src} 
-                alt="Roadmap y Cálculos" 
+              <img
+                src={infographic2Src}
+                alt="Roadmap y Cálculos"
                 className="w-full rounded-xl"
                 loading="lazy"
               />
