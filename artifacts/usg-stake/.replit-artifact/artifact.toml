@@ -19,12 +19,7 @@ run = "pnpm --filter @workspace/usg-stake run dev"
 
 [services.production]
 build = [ "pnpm", "--filter", "@workspace/usg-stake", "run", "build" ]
-publicDir = "artifacts/usg-stake/dist/public"
-serve = "static"
-
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+run = "pnpm --filter @workspace/usg-stake run start"
 
 [services.env]
 PORT = "26265"
